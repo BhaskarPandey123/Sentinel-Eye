@@ -15,15 +15,22 @@ This project is developed by Bhashkar Pandey and all rights are reserved by Bhas
 
 ## Layers
 
-Index.html
-|____ Metadata Analysis
-|____ Reverse Engine Analysis
-|____ Digital Forensics
-|____ Audio Analysis
-|____ Video Analysis
-|____ AI/ML Detection
-|____ Cross Source Context Verification
-|____ Decision Intelligence Dashboard
+## Layers
+
+Sentinel Eye uses an 8-layer investigation pipeline:
+
+| Layer | Analysis |
+|---|---|
+| **01 — Metadata Analysis** | Examines available metadata and media provenance indicators. |
+| **02 — Reverse Search** | Helps determine whether the media has appeared online previously. |
+| **03 — Digital Forensics** | Examines digital artifacts and inconsistencies within the media. |
+| **04 — Audio Analysis** | Evaluates audio characteristics for potential manipulation or synthetic content. |
+| **05 — Video Analysis** | Examines video frames and temporal consistency for irregularities. |
+| **06 — AI/ML Detection** | Uses detection techniques to identify patterns associated with synthetic or manipulated media. |
+| **07 — Cross-Source Verification** | Compares available contextual information across external sources. |
+| **08 — Decision Intelligence Dashboard** | Combines the available evidence into an understandable confidence assessment with supporting findings. |
+
+> Each layer provides an independent piece of evidence. Sentinel Eye combines these findings rather than relying on a single indicator to determine authenticity.
 
 # Examples
 
