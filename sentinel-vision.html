@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel Vision — Digital Media Authenticity Verification</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0a0c08;
+    --bg-1: #10130d;
+    --card: #131610;
+    --line: #262b1e;
+    --line-strong: #3a4028;
+    --green: #b6ff3b;
+    --green-dim: #7cae2a;
+    --amber: #ffb020;
+    --red: #ff5c5c;
+    --text: #eef0e6;
+    --text-dim: #97a084;
+    --text-faint: #5c6350;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --display: 'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family: var(--sans);
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(182,255,59,0.05), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(182,255,59,0.04), transparent 45%);
+    min-height:100vh;
+  }
+  .wrap{max-width:960px; margin:0 auto; padding:48px 24px 96px;}
+
+  header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px solid var(--line); padding-bottom:20px; margin-bottom:8px; flex-wrap:wrap; gap:12px;}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{width:38px; height:38px; border:1.5px solid var(--green); border-radius:8px; display:flex; align-items:center; justify-content:center; font-family:var(--mono); color:var(--green); font-weight:700; font-size:13px; flex-shrink:0;}
+  h1{font-family:var(--display); font-size:26px; font-weight:700; margin:0; letter-spacing:0.3px;}
+  .tag{font-family:var(--mono); font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:1.5px; margin-top:2px;}
+  .case-meta{font-family:var(--mono); font-size:12px; color:var(--text-dim); text-align:right; line-height:1.6;}
+  .case-meta b{color:var(--green);}
+
+  .lede{color:var(--text-dim); font-size:14.5px; line-height:1.6; max-width:640px; margin:20px 0 32px;}
+
+  .drop{
+    border:1.5px dashed var(--line-strong); border-radius:12px; padding:40px 24px;
+    text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
+    background:var(--bg-1);
+  }
+  .drop:hover, .drop.drag{border-color:var(--green); background:rgba(182,255,59,0.03);}
+  .drop svg{width:30px; height:30px; stroke:var(--text-dim); margin-bottom:10px;}
+  .drop .main{font-size:14.5px; color:var(--text);}
+  .drop .sub{font-size:12.5px; color:var(--text-faint); margin-top:6px; font-family:var(--mono);}
+  input[type=file]{display:none;}
+
+  .preview{display:flex; gap:20px; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-top:16px; flex-wrap:wrap;}
+  .preview img, .preview video{width:110px; height:110px; object-fit:cover; border-radius:8px; border:1px solid var(--line);}
+  .preview .info{flex:1; min-width:180px;}
+  .preview .fname{font-size:14px; font-weight:500;}
+  .preview .fmeta{font-family:var(--mono); font-size:12px; color:var(--text-dim); margin-top:4px;}
+  .btn{
+    font-family:var(--sans); font-size:13.5px; font-weight:600; padding:11px 20px; border-radius:8px;
+    border:1px solid var(--green); background:var(--green); color:#0a0c08; cursor:pointer;
+    transition:transform .1s, opacity .15s;
+  }
+  .btn:hover{opacity:.9;}
+  .btn:active{transform:scale(0.98);}
+  .btn.ghost{background:transparent; color:var(--text); border-color:var(--line-strong);}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;}
+
+  .keyword-input{
+    width:100%; background:var(--bg-1); border:1px solid var(--line); color:var(--text);
+    font-family:var(--sans); font-size:13.5px; padding:10px 12px; border-radius:8px; margin-top:8px;
+  }
+
+  .layers{margin-top:36px; display:flex; flex-direction:column; gap:14px;}
+  .layer{
+    background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px;
+    opacity:0; transform:translateY(6px); transition:opacity .35s, transform .35s;
+  }
+  .layer.show{opacity:1; transform:translateY(0);}
+  .layer-head{display:flex; align-items:center; gap:12px; margin-bottom:2px;}
+  .layer-num{font-family:var(--mono); font-size:11px; color:var(--text-faint); border:1px solid var(--line-strong); border-radius:6px; padding:2px 7px; flex-shrink:0;}
+  .layer-title{font-family:var(--display); font-size:15px; font-weight:700;}
+  .layer-status{margin-left:auto; font-family:var(--mono); font-size:11px; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:0.5px;}
+  .st-ok{color:var(--green); border:1px solid var(--green-dim); background:rgba(182,255,59,0.06);}
+  .st-warn{color:var(--amber); border:1px solid #a37619; background:rgba(255,176,32,0.06);}
+  .st-na{color:var(--text-faint); border:1px solid var(--line-strong);}
+  .layer-body{font-size:13.5px; color:var(--text-dim); line-height:1.65; margin-top:10px;}
+  .layer-body b{color:var(--text); font-weight:500;}
+  .kv{display:grid; grid-template-columns:auto 1fr; gap:4px 14px; font-family:var(--mono); font-size:12.5px; margin-top:8px;}
+  .kv div:nth-child(odd){color:var(--text-faint);}
+  .kv div:nth-child(even){color:var(--text);}
+  .canvases{display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;}
+  .canvases canvas, .canvases img{width:130px; height:130px; object-fit:cover; border-radius:6px; border:1px solid var(--line);}
+  .cap{font-family:var(--mono); font-size:10.5px; color:var(--text-faint); text-align:center; margin-top:4px;}
+  .col{display:flex; flex-direction:column;}
+  .bar-track{height:6px; background:var(--bg-1); border-radius:3px; overflow:hidden; margin-top:8px; border:1px solid var(--line);}
+  .bar-fill{height:100%; border-radius:3px;}
+  .linkbtns{display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;}
+  .linkbtns a{
+    font-family:var(--mono); font-size:11.5px; color:var(--text); text-decoration:none;
+    border:1px solid var(--line-strong); padding:6px 10px; border-radius:6px; transition:border-color .15s, color .15s;
+  }
+  .linkbtns a:hover{border-color:var(--green); color:var(--green);}
+
+  .dashboard{margin-top:20px; border:1px solid var(--green-dim); border-radius:14px; padding:26px; background:linear-gradient(180deg, rgba(182,255,59,0.05), transparent 60%);}
+  .verdict{display:flex; align-items:center; gap:18px; flex-wrap:wrap;}
+  .gauge{width:96px; height:96px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative;}
+  .gauge svg{position:absolute; top:0; left:0;}
+  .gauge .num{font-family:var(--display); font-size:22px; font-weight:700; z-index:1;}
+  .verdict-text{flex:1; min-width:220px;}
+  .verdict-label{font-family:var(--display); font-size:19px; font-weight:700;}
+  .verdict-sub{font-size:13px; color:var(--text-dim); margin-top:4px; line-height:1.6;}
+  .evidence-list{margin-top:18px; padding-top:16px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:8px;}
+  .ev-item{display:flex; gap:10px; font-size:13px; align-items:flex-start;}
+  .ev-dot{width:6px; height:6px; border-radius:50%; margin-top:6px; flex-shrink:0;}
+
+  footer{margin-top:40px; padding-top:20px; border-top:1px solid var(--line); font-family:var(--mono); font-size:11.5px; color:var(--text-faint); line-height:1.8;}
+  footer b{color:var(--text-dim);}
+  .hidden{display:none !important;}
+  @media (max-width:600px){ .case-meta{text-align:left;} header{flex-direction:column; align-items:flex-start;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="brand-mark">SV</div>
+      <div>
+        <h1>Sentinel Vision</h1>
+        <div class="tag">Digital Media Authenticity Verification</div>
+      </div>
+    </div>
+    <div class="case-meta" id="caseMeta">CASE No. <b id="caseId">—</b><br>STATUS: <span id="caseStatus">Awaiting evidence</span></div>
+  </header>
+
+  <p class="lede">Upload an image or short video. Sentinel Vision runs it through a set of independent forensic layers — metadata, error-level analysis, noise-consistency analysis, and (for video) frame-consistency checks — all computed live in your browser, then combines the findings into an explainable confidence score. This build is a working prototype of the pipeline; two layers (deep audio/video AI detection and automated cross-platform crawling) are stubbed with manual tools pending a server-side backend — see the notes at the bottom.</p>
+
+  <div class="drop" id="drop">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+    <div class="main">Drop an image or video, or click to browse</div>
+    <div class="sub">JPEG · PNG · WEBP · MP4 · WEBM — analysis stays local to your browser</div>
+    <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,video/mp4,video/webm">
+  </div>
+
+  <div class="preview hidden" id="preview">
+    <img id="previewImg" class="hidden">
+    <video id="previewVid" class="hidden" muted></video>
+    <div class="info">
+      <div class="fname" id="fname">—</div>
+      <div class="fmeta" id="fmeta">—</div>
+      <div class="row">
+        <button class="btn" id="runBtn">Begin investigation</button>
+        <button class="btn ghost" id="resetBtn">Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="layers" class="layers"></div>
+  <div id="dashboard"></div>
+
+  <footer>
+    <b>Notes on this build.</b> Metadata, error-level analysis, and noise-consistency are genuine computations run on the actual pixel/byte data of your file — not simulated. Reverse-image search and cross-source checks require server-side crawling or paid APIs (Google, Bing, TinEye) which this static prototype doesn't have credentials for, so those layers hand you direct, working links to run the check yourself. AI-generated-media detection here is a texture/noise-based heuristic, not a trained deepfake classifier — a production version would plug in a model such as an EXIF-CNN or DCT-artifact classifier here. Audio voice-clone detection is not implemented in this build. Nothing you upload leaves your device.
+  </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let currentFile = null, mediaKind = null;
+
+$('caseId').textContent = 'SV-' + Math.floor(100000 + Math.random()*900000);
+
+const drop = $('drop'), fileInput = $('fileInput');
+drop.addEventListener('click', () => fileInput.click());
+['dragover','dragenter'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('drag'); }));
+['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('drag'); }));
+drop.addEventListener('drop', e => { if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+fileInput.addEventListener('change', e => { if(e.target.files.length) handleFile(e.target.files[0]); });
+
+function handleFile(file){
+  currentFile = file;
+  mediaKind = file.type.startsWith('video') ? 'video' : 'image';
+  $('layers').innerHTML = ''; $('dashboard').innerHTML = '';
+  $('preview').classList.remove('hidden');
+  $('fname').textContent = file.name;
+  $('fmeta').textContent = `${(file.size/1024).toFixed(1)} KB · ${file.type || 'unknown type'}`;
+  const url = URL.createObjectURL(file);
+  if(mediaKind === 'image'){
+    $('previewImg').src = url; $('previewImg').classList.remove('hidden');
+    $('previewVid').classList.add('hidden');
+  } else {
+    $('previewVid').src = url; $('previewVid').classList.remove('hidden');
+    $('previewImg').classList.add('hidden');
+  }
+  $('caseStatus').textContent = 'Evidence loaded';
+}
+
+$('resetBtn').addEventListener('click', () => {
+  currentFile = null; $('preview').classList.add('hidden'); $('layers').innerHTML=''; $('dashboard').innerHTML='';
+  $('caseStatus').textContent = 'Awaiting evidence'; fileInput.value='';
+});
+
+$('runBtn').addEventListener('click', runInvestigation);
+
+function layerCard(num, title){
+  const div = document.createElement('div');
+  div.className = 'layer';
+  div.innerHTML = `<div class="layer-head"><span class="layer-num">${num}</span><span class="layer-title">${title}</span><span class="layer-status st-na" id="status-${num}">Pending</span></div><div class="layer-body" id="body-${num}"></div>`;
+  $('layers').appendChild(div);
+  requestAnimationFrame(()=> setTimeout(()=> div.classList.add('show'), 40*num));
+  return div;
+}
+function setStatus(num, cls, text){ const el = $('status-'+num); el.className = 'layer-status '+cls; el.textContent = text; }
+function setBody(num, html){ $('body-'+num).innerHTML = html; }
+
+async function runInvestigation(){
+  $('runBtn').disabled = true;
+  $('layers').innerHTML = ''; $('dashboard').innerHTML = '';
+  $('caseStatus').textContent = 'Investigation in progress…';
+
+  const scores = []; // {label, weight, suspicion (0-100), note}
+
+  // Layer 1 — Metadata
+  layerCard(1, 'Metadata analysis');
+  await tick();
+  const meta = mediaKind === 'image' ? await readExif(currentFile) : { note: 'EXIF parsing applies to still images; video container metadata not parsed in this build.' };
+  renderMetadata(meta, scores);
+
+  // Layer 2 — Reverse search
+  layerCard(2, 'Reverse-search engines');
+  await tick();
+  renderReverseSearch();
+
+  // Layer 3 — Digital forensics (ELA)
+  layerCard(3, 'Digital forensics — error level analysis');
+  await tick();
+  if(mediaKind === 'image'){
+    const ela = await computeELA(currentFile);
+    renderELA(ela, scores);
+  } else {
+    setStatus(3, 'st-na', 'N/A for video');
+    setBody(3, 'Error-level analysis applies to single JPEG frames. Run this layer on an extracted frame if needed.');
+  }
+
+  // Layer 4 — AI/ML detection (noise heuristic)
+  layerCard(4, 'AI / ML detection (noise-consistency heuristic)');
+  await tick();
+  if(mediaKind === 'image'){
+    const noise = await computeNoiseConsistency(currentFile);
+    renderNoise(noise, scores);
+  } else {
+    setStatus(4, 'st-na', 'Deferred to layer 6');
+    setBody(4, 'For video, the equivalent check runs per-frame in the video-analysis layer below.');
+  }
+
+  // Layer 5 — Video analysis
+  layerCard(5, 'Video analysis — frame consistency');
+  await tick();
+  if(mediaKind === 'video'){
+    const vid = await analyzeVideoFrames(currentFile);
+    renderVideo(vid, scores);
+  } else {
+    setStatus(5, 'st-na', 'N/A for image');
+    setBody(5, 'No video stream present in this file.');
+  }
+
+  // Layer 6 — Audio analysis
+  layerCard(6, 'Audio analysis — voice-clone detection');
+  await tick();
+  setStatus(6, 'st-na', 'Not implemented');
+  setBody(6, 'Voice-clone and full-audio analysis need spectrogram-based ML models running server-side. Not included in this static prototype — flagged as a roadmap item rather than faked with a placeholder score.');
+
+  // Layer 7 — Cross-source context
+  layerCard(7, 'Cross-source context verification');
+  await tick();
+  renderCrossSource();
+
+  // Layer 8 — Decision Intelligence Dashboard
+  await tick();
+  renderDashboard(scores);
+
+  $('caseStatus').textContent = 'Investigation complete';
+  $('runBtn').disabled = false;
+}
+
+function tick(ms=250){ return new Promise(r=>setTimeout(r,ms)); }
+
+// ---------- Layer 1: EXIF ----------
+async function readExif(file){
+  const buf = await file.arrayBuffer();
+  const view = new DataView(buf);
+  if(view.getUint16(0) !== 0xFFD8) return { present:false };
+  let offset = 2;
+  while(offset < view.byteLength - 4){
+    if(view.getUint8(offset) !== 0xFF) break;
+    const marker = view.getUint8(offset+1);
+    const size = view.getUint16(offset+2);
+    if(marker === 0xE1){
+      const start = offset+4;
+      const tag = String.fromCharCode(view.getUint8(start),view.getUint8(start+1),view.getUint8(start+2),view.getUint8(start+3));
+      if(tag === 'Exif'){ return parseTiff(view, start+6); }
+    }
+    if(marker === 0xDA) break;
+    offset += 2+size;
+  }
+  return { present:false };
+}
+function parseTiff(view, tiffStart){
+  const little = view.getUint16(tiffStart) === 0x4949;
+  const g16 = o => view.getUint16(o, little), g32 = o => view.getUint32(o, little);
+  const ifdOffset = g32(tiffStart+4);
+  const tags = readIFD(view, tiffStart, tiffStart+ifdOffset, little);
+  const result = { present:true,
+    make: tags[0x010F], model: tags[0x0110], software: tags[0x0131],
+    dateTime: tags[0x0132], orientation: tags[0x0112], gps: null };
+  if(tags[0x8825] !== undefined){
+    const gpsTags = readIFD(view, tiffStart, tiffStart+tags[0x8825], little);
+    result.gps = { latRef: gpsTags[1], lat: gpsTags[2], lonRef: gpsTags[3], lon: gpsTags[4] };
+  }
+  return result;
+}
+function readIFD(view, tiffStart, ifdStart, little){
+  const g16 = o => view.getUint16(o, little), g32 = o => view.getUint32(o, little);
+  const count = g16(ifdStart);
+  const tags = {};
+  const typeSizes = {1:1,2:1,3:2,4:4,5:8,7:1,9:4,10:8};
+  for(let i=0;i<count;i++){
+    const entry = ifdStart + 2 + i*12;
+    const tagId = g16(entry), type = g16(entry+2), num = g32(entry+4);
+    const size = (typeSizes[type]||1) * num;
+    const valueOffset = size <= 4 ? entry+8 : tiffStart + g32(entry+8);
+    let val;
+    if(type === 2){ // ASCII
+      let s = ''; for(let j=0;j<num-1;j++) s += String.fromCharCode(view.getUint8(valueOffset+j));
+      val = s.trim();
+    } else if(type === 3){ val = num===1 ? g16(valueOffset) : Array.from({length:num},(_,j)=>g16(valueOffset+j*2)); }
+    else if(type === 4){ val = num===1 ? g32(valueOffset) : Array.from({length:num},(_,j)=>g32(valueOffset+j*4)); }
+    else if(type === 5 || type === 10){
+      const readRat = o => { const n=g32(o), d=g32(o+4); return d? n/d : 0; };
+      val = num===1 ? readRat(valueOffset) : Array.from({length:num},(_,j)=>readRat(valueOffset+j*8));
+    } else { val = null; }
+    tags[tagId] = val;
+  }
+  return tags;
+}
+function dms2dd(dms, ref){
+  if(!dms) return null;
+  const dd = dms[0] + dms[1]/60 + dms[2]/3600;
+  return (ref === 'S' || ref === 'W') ? -dd : dd;
+}
+function renderMetadata(meta, scores){
+  if(!meta.present){
+    setStatus(1, 'st-warn', 'Stripped / absent');
+    setBody(1, `No EXIF metadata block was found. This is common for images downloaded from social media or messaging apps (they routinely strip EXIF), so on its own this is <b>not</b> strong evidence of manipulation — but it also means camera provenance cannot be confirmed from this file alone. ${meta.note?meta.note:''}`);
+    scores.push({label:'Metadata', weight:0.5, suspicion:35, note:'No EXIF metadata present — camera provenance cannot be confirmed.'});
+    return;
+  }
+  const kv = [];
+  if(meta.make) kv.push(['Camera make', meta.make]);
+  if(meta.model) kv.push(['Camera model', meta.model]);
+  if(meta.software) kv.push(['Software tag', meta.software]);
+  if(meta.dateTime) kv.push(['Date/time original', meta.dateTime]);
+  if(meta.gps && meta.gps.lat){
+    const lat = dms2dd(meta.gps.lat, meta.gps.latRef), lon = dms2dd(meta.gps.lon, meta.gps.lonRef);
+    kv.push(['GPS coordinates', `${lat?.toFixed(5)}, ${lon?.toFixed(5)}`]);
+  }
+  const editingTools = ['photoshop','gimp','lightroom','affinity','pixlr','canva','snapseed','faceapp'];
+  const softwareFlag = meta.software && editingTools.some(t => meta.software.toLowerCase().includes(t));
+  let suspicion = 15;
+  let note = 'Full EXIF chain present with camera make/model, suggesting an unedited camera-original file (though metadata can be forged).';
+  if(kv.length === 0){
+    suspicion = 30; note = 'EXIF block exists but carries no useful camera fields.';
+    setStatus(1, 'st-warn', 'Sparse');
+  } else if(softwareFlag){
+    suspicion = 55; note = `Software tag identifies an editing tool (${meta.software}) — the file passed through image-editing software after capture.`;
+    setStatus(1, 'st-warn', 'Editing tool detected');
+  } else {
+    setStatus(1, 'st-ok', 'Camera metadata present');
+  }
+  setBody(1, `<div class="kv">${kv.map(([k,v])=>`<div>${k}</div><div>${v}</div>`).join('')}</div>` +
+    (kv.length===0 ? '<div style="margin-top:8px">No Make/Model/GPS/Software fields decoded from the EXIF block.</div>' : ''));
+  scores.push({label:'Metadata', weight:0.9, suspicion, note});
+}
+
+// ---------- Layer 2: Reverse search ----------
+function renderReverseSearch(){
+  setStatus(2, 'st-na', 'Manual — opens in new tab');
+  setBody(2, `Automated reverse-image crawling needs a paid API (Google Vision, Bing Visual Search, or TinEye) this static prototype has no credentials for. Use these direct links with your file to check whether the image has appeared online before:
+    <div class="linkbtns">
+      <a href="https://images.google.com/" target="_blank" rel="noopener">Google Images →</a>
+      <a href="https://www.bing.com/visualsearch" target="_blank" rel="noopener">Bing Visual Search →</a>
+      <a href="https://tineye.com/" target="_blank" rel="noopener">TinEye →</a>
+      <a href="https://yandex.com/images/" target="_blank" rel="noopener">Yandex Images →</a>
+    </div>`);
+}
+
+// ---------- Layer 3: ELA ----------
+function loadImageEl(file){ return new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>res(img); img.onerror=rej; img.src=URL.createObjectURL(file); }); }
+async function computeELA(file){
+  const img = await loadImageEl(file);
+  const maxDim = 700;
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+  const c1 = document.createElement('canvas'); c1.width=w; c1.height=h;
+  const ctx1 = c1.getContext('2d'); ctx1.drawImage(img,0,0,w,h);
+  const original = ctx1.getImageData(0,0,w,h);
+  const jpegUrl = c1.toDataURL('image/jpeg', 0.90);
+  const reImg = await new Promise((res)=>{ const im=new Image(); im.onload=()=>res(im); im.src=jpegUrl; });
+  const c2 = document.createElement('canvas'); c2.width=w; c2.height=h;
+  const ctx2 = c2.getContext('2d'); ctx2.drawImage(reImg,0,0,w,h);
+  const recompressed = ctx2.getImageData(0,0,w,h);
+  const elaCanvas = document.createElement('canvas'); elaCanvas.width=w; elaCanvas.height=h;
+  const elaCtx = elaCanvas.getContext('2d'); const elaData = elaCtx.createImageData(w,h);
+  let sum=0, sumSq=0, max=0, n=w*h;
+  for(let i=0;i<original.data.length;i+=4){
+    const d = (Math.abs(original.data[i]-recompressed.data[i]) + Math.abs(original.data[i+1]-recompressed.data[i+1]) + Math.abs(original.data[i+2]-recompressed.data[i+2]))/3;
+    const amp = Math.min(255, d*8);
+    elaData.data[i]=amp; elaData.data[i+1]=amp; elaData.data[i+2]=amp; elaData.data[i+3]=255;
+    sum += d; sumSq += d*d; if(d>max) max=d;
+  }
+  elaCtx.putImageData(elaData,0,0);
+  const mean = sum/n, variance = sumSq/n - mean*mean, std = Math.sqrt(Math.max(0,variance));
+  return { elaCanvas, mean, std, max, previewUrl: c1.toDataURL() };
+}
+function renderELA(ela, scores){
+  const suspicion = Math.max(0, Math.min(100, (ela.mean/10)*100));
+  const level = suspicion > 55 ? ['st-warn','Elevated'] : suspicion > 30 ? ['st-warn','Moderate'] : ['st-ok','Low'];
+  setStatus(3, level[0], level[1]+' compression variance');
+  const div = document.createElement('div');
+  setBody(3, `Re-compresses the image at fixed JPEG quality and diffs it against the original — regions that were edited or spliced in later tend to compress differently and light up brighter in the error map. Uniform, evenly dark output is what an untouched camera JPEG typically shows.
+    <div class="kv"><div>Mean error</div><div>${ela.mean.toFixed(2)} / 255</div><div>Std deviation</div><div>${ela.std.toFixed(2)}</div><div>Max localized error</div><div>${ela.max.toFixed(0)} / 255</div></div>
+    <div class="canvases"><div class="col"><img id="elaSrc"><div class="cap">Original (scaled)</div></div><div class="col"><img id="elaOut"><div class="cap">Error-level map</div></div></div>`);
+  $('elaSrc').src = ela.previewUrl;
+  $('elaOut').src = ela.elaCanvas.toDataURL();
+  scores.push({label:'Error-level analysis', weight:1, suspicion, note: `ELA mean pixel error ${ela.mean.toFixed(1)}/255 — ${suspicion>55?'notably':suspicion>30?'somewhat':'minimally'} inconsistent compression signature.`});
+}
+
+// ---------- Layer 4: Noise consistency ----------
+async function computeNoiseConsistency(file){
+  const img = await loadImageEl(file);
+  const maxDim = 600;
+  const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+  const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+  const c = document.createElement('canvas'); c.width=w; c.height=h;
+  const ctx = c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+  const data = ctx.getImageData(0,0,w,h).data;
+  const gray = new Float32Array(w*h);
+  for(let i=0;i<w*h;i++){ const o=i*4; gray[i] = 0.299*data[o]+0.587*data[o+1]+0.114*data[o+2]; }
+  const block = 16; const variances = [];
+  const heat = ctx.createImageData(w,h);
+  for(let by=0; by<h-block; by+=block){
+    for(let bx=0; bx<w-block; bx+=block){
+      let vals = [];
+      for(let y=by+1;y<by+block-1;y++){
+        for(let x=bx+1;x<bx+block-1;x++){
+          const idx = y*w+x;
+          const lap = 4*gray[idx] - gray[idx-1] - gray[idx+1] - gray[idx-w] - gray[idx+w];
+          vals.push(lap);
+        }
+      }
+      const m = vals.reduce((a,b)=>a+b,0)/vals.length;
+      const v = vals.reduce((a,b)=>a+(b-m)*(b-m),0)/vals.length;
+      variances.push(v);
+      const shade = Math.min(255, Math.sqrt(v)*3);
+      for(let y=by;y<by+block && y<h;y++) for(let x=bx;x<bx+block && x<w;x++){
+        const o=(y*w+x)*4; heat.data[o]=shade; heat.data[o+1]=40; heat.data[o+2]=255-shade; heat.data[o+3]=255;
+      }
+    }
+  }
+  const meanV = variances.reduce((a,b)=>a+b,0)/variances.length;
+  const stdV = Math.sqrt(variances.reduce((a,b)=>a+(b-meanV)*(b-meanV),0)/variances.length);
+  const cov = meanV>0 ? stdV/meanV : 0;
+  const heatCanvas = document.createElement('canvas'); heatCanvas.width=w; heatCanvas.height=h;
+  heatCanvas.getContext('2d').putImageData(heat,0,0);
+  return { cov, meanV, stdV, heatCanvas, previewUrl: c.toDataURL() };
+}
+function renderNoise(noise, scores){
+  const suspicion = Math.max(0, Math.min(100, noise.cov*45));
+  const level = suspicion > 55 ? ['st-warn','High inconsistency'] : suspicion > 30 ? ['st-warn','Moderate'] : ['st-ok','Consistent texture'];
+  setStatus(4, level[0], level[1]);
+  setBody(4, `Splits the image into blocks and measures high-frequency (Laplacian) texture energy in each. A single camera sensor or a single generative model produces fairly uniform noise/texture statistics across an image; splicing regions from different sources — or blending AI-generated content into a real photo — tends to leave patchy, inconsistent texture between regions.
+    <div class="kv"><div>Coefficient of variation</div><div>${noise.cov.toFixed(3)}</div><div>Mean block energy</div><div>${noise.meanV.toFixed(1)}</div></div>
+    <div class="canvases"><div class="col"><img id="noiseSrc"><div class="cap">Source (scaled)</div></div><div class="col"><img id="noiseOut"><div class="cap">Texture-energy map</div></div></div>
+    <div style="margin-top:8px; font-size:12px; color:var(--text-faint)">Heuristic proxy, not a trained deepfake classifier — see build notes below.</div>`);
+  $('noiseSrc').src = noise.previewUrl;
+  $('noiseOut').src = noise.heatCanvas.toDataURL();
+  scores.push({label:'Noise / texture consistency', weight:1, suspicion, note:`Block-texture coefficient of variation ${noise.cov.toFixed(2)} — ${suspicion>55?'patchy':suspicion>30?'somewhat uneven':'fairly uniform'} noise signature across the frame.`});
+}
+
+// ---------- Layer 5: Video frames ----------
+function analyzeVideoFrames(file){
+  return new Promise((resolve)=>{
+    const video = document.createElement('video'); video.src = URL.createObjectURL(file); video.muted = true; video.crossOrigin='anonymous';
+    video.addEventListener('loadedmetadata', async () => {
+      const duration = video.duration; const n = Math.min(6, Math.max(3, Math.floor(duration)));
+      const times = Array.from({length:n}, (_,i)=> (duration*(i+0.5))/n);
+      const canvas = document.createElement('canvas');
+      const w = Math.min(320, video.videoWidth), h = Math.round(w * video.videoHeight/video.videoWidth);
+      canvas.width=w; canvas.height=h; const ctx = canvas.getContext('2d');
+      const frames = [];
+      for(const t of times){
+        await new Promise(r=>{ video.currentTime = t; video.onseeked = r; });
+        ctx.drawImage(video,0,0,w,h);
+        frames.push(ctx.getImageData(0,0,w,h));
+      }
+      let diffs = [];
+      for(let i=1;i<frames.length;i++){
+        let sum=0; const a=frames[i-1].data, b=frames[i].data;
+        for(let p=0;p<a.length;p+=4) sum += Math.abs(a[p]-b[p]);
+        diffs.push(sum/(w*h));
+      }
+      const meanDiff = diffs.reduce((a,b)=>a+b,0)/diffs.length;
+      const stdDiff = Math.sqrt(diffs.reduce((a,b)=>a+(b-meanDiff)*(b-meanDiff),0)/diffs.length);
+      resolve({ duration, framesSampled:n, meanDiff, stdDiff, thumb: canvas.toDataURL() });
+    });
+  });
+}
+function renderVideo(vid, scores){
+  const cov = vid.meanDiff>0 ? vid.stdDiff/vid.meanDiff : 0;
+  const suspicion = Math.max(0, Math.min(100, cov*60));
+  setStatus(5, suspicion>50?'st-warn':'st-ok', suspicion>50?'Irregular motion':'Regular motion pattern');
+  setBody(5, `Sampled ${vid.framesSampled} frames across a ${vid.duration.toFixed(1)}s clip and measured frame-to-frame pixel change. Real video motion is fairly continuous; face-swap or lip-sync deepfakes often show localized flicker or irregular jumps around the manipulated region frame to frame.
+    <div class="kv"><div>Frames sampled</div><div>${vid.framesSampled}</div><div>Mean frame delta</div><div>${vid.meanDiff.toFixed(2)}</div><div>Delta variability</div><div>${cov.toFixed(2)}</div></div>
+    <div class="canvases"><div class="col"><img src="${vid.thumb}"><div class="cap">Sample frame</div></div></div>`);
+  scores.push({label:'Video frame consistency', weight:1, suspicion, note:`Frame-to-frame motion variability ${cov.toFixed(2)} across ${vid.framesSampled} sampled frames.`});
+}
+
+// ---------- Layer 7: Cross-source ----------
+function renderCrossSource(){
+  setStatus(7, 'st-na', 'Needs your input');
+  setBody(7, `This layer checks whether the claim attached to the media (a caption, a location, an event) is corroborated elsewhere. Sentinel Vision can't infer that claim on its own — type any keywords, names, or claimed context below and check it against news and social search:
+    <input class="keyword-input" id="ctxKeywords" placeholder="e.g. flood Meerut August 2026">
+    <div class="linkbtns">
+      <a href="#" id="newsLink" target="_blank" rel="noopener">Search Google News →</a>
+      <a href="#" id="xLink" target="_blank" rel="noopener">Search X / Twitter →</a>
+      <a href="#" id="factLink" target="_blank" rel="noopener">Search fact-check databases →</a>
+    </div>`);
+  const update = () => {
+    const q = encodeURIComponent($('ctxKeywords').value || '');
+    $('newsLink').href = `https://news.google.com/search?q=${q}`;
+    $('xLink').href = `https://twitter.com/search?q=${q}`;
+    $('factLink').href = `https://toolbox.google.com/factcheck/explorer/search/${q}`;
+  };
+  $('ctxKeywords').addEventListener('input', update); update();
+}
+
+// ---------- Layer 8: Dashboard ----------
+function renderDashboard(scores){
+  const applicable = scores.filter(s=>s.suspicion!==undefined);
+  const totalWeight = applicable.reduce((a,s)=>a+s.weight,0);
+  const overall = totalWeight ? applicable.reduce((a,s)=>a+s.suspicion*s.weight,0)/totalWeight : 0;
+  let label, color, sub;
+  if(overall < 30){ label='Likely authentic'; color='var(--green)'; sub='No strong signals of manipulation across the applicable layers. This does not rule out sophisticated forgery — treat as one input among several.'; }
+  else if(overall < 60){ label='Inconclusive — manual review recommended'; color='var(--amber)'; sub='Mixed signals across layers. Run the manual reverse-search and cross-source checks above before drawing a conclusion.'; }
+  else { label='Signs of possible manipulation'; color='var(--red)'; sub='Multiple layers show elevated suspicion. Treat this media with caution and verify through independent sources before relying on it.'; }
+
+  const circumference = 2*Math.PI*40;
+  const dash = (overall/100)*circumference;
+
+  const dash_html = `
+  <div class="dashboard">
+    <div class="layer-head" style="margin-bottom:14px;"><span class="layer-num">08</span><span class="layer-title">Decision intelligence dashboard</span></div>
+    <div class="verdict">
+      <div class="gauge">
+        <svg width="96" height="96" viewBox="0 0 96 96">
+          <circle cx="48" cy="48" r="40" fill="none" stroke="#262b1e" stroke-width="8"/>
+          <circle cx="48" cy="48" r="40" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round"
+            stroke-dasharray="${dash} ${circumference}" transform="rotate(-90 48 48)"/>
+        </svg>
+        <div class="num">${Math.round(overall)}</div>
+      </div>
+      <div class="verdict-text">
+        <div class="verdict-label" style="color:${color}">${label}</div>
+        <div class="verdict-sub">${sub}</div>
+      </div>
+    </div>
+    <div class="evidence-list">
+      ${applicable.map(s=>`<div class="ev-item"><span class="ev-dot" style="background:${s.suspicion>55?'var(--red)':s.suspicion>30?'var(--amber)':'var(--green)'}"></span><div><b style="color:var(--text)">${s.label}</b> — ${s.note}</div></div>`).join('')}
+    </div>
+    <div class="row" style="margin-top:16px;">
+      <button class="btn ghost" id="downloadReport">Download report (JSON)</button>
+    </div>
+  </div>`;
+  $('dashboard').innerHTML = dash_html;
+  $('downloadReport').addEventListener('click', ()=>{
+    const report = { case: $('caseId').textContent, file: currentFile.name, overallSuspicionScore: Math.round(overall), verdict: label, layers: applicable, generatedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(report,null,2)], {type:'application/json'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `sentinel-vision-${$('caseId').textContent}.json`; a.click();
+  });
+}
+</script>
+</body>
+</html>
