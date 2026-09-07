@@ -34,8 +34,9 @@ Sentinel Eye uses an 8-layer investigation pipeline:
 
 # Examples
 
-Live Demo: 
-Screenshots:
+Live Demo: https://bhaskarpandey123.github.io/Sentinel-Eye/
+Screenshots:<img width="1611" height="683" alt="image" src="https://github.com/user-attachments/assets/dfbf467d-d14c-43b1-a1f5-4dead8709fea" />
+
 
 
 
